@@ -28,15 +28,10 @@ public class SPINConstraintViolationException extends ModelException
 {
     private final List<ConstraintViolation> cvs;
     
-    public SPINConstraintViolationException(List<ConstraintViolation> cvs, Model model, String graphURI)
+    public SPINConstraintViolationException(List<ConstraintViolation> cvs, Model model)
     {
         super(model);
         this.cvs = cvs;
-    }
-
-    public SPINConstraintViolationException(List<ConstraintViolation> cvs, Model model)
-    {
-        this(cvs, model, null);
     }
     
     public List<ConstraintViolation> getConstraintViolations()
