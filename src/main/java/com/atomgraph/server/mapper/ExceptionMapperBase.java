@@ -41,54 +41,59 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 /**
- * Abstract base class for ExceptionMappers that build responses with exceptions as RDF resources.
+ * Abstract base class for ExceptionMappers that build responses with exceptions
+ * as RDF resources.
  * 
  * @author Martynas Jusevičius {@literal <martynas@atomgraph.com>}
  */
 @Provider
-abstract public class ExceptionMapperBase
-{
+public abstract class ExceptionMapperBase {
 
-    @Context private Request request;
-    @Context private UriInfo uriInfo;
-    
+    @Context
+    private Request request;
+    @Context
+    private UriInfo uriInfo;
+
     private final MediaTypes mediaTypes;
-    
+
     @Inject
-    public ExceptionMapperBase(MediaTypes mediaTypes)
-    {
+    protected ExceptionMapperBase(MediaTypes mediaTypes) {
         this.mediaTypes = mediaTypes;
     }
 
-    public Resource toResource(Exception ex, Response.StatusType status, Resource statusResource)
-    {
-        if (ex == null) throw new IllegalArgumentException("Exception cannot be null");
-        if (status == null) throw new IllegalArgumentException("Response.Status cannot be null");
+    public Resource toResource(Exception ex, Response.StatusType status, Resource statusResource) {
+        if (ex == null)
+            throw new IllegalArgumentException("Exception cannot be null");
+        if (status == null)
+            throw new IllegalArgumentException("Response.Status cannot be null");
 
-        Resource resource = ModelFactory.createDefaultModel().createResource().
-                addProperty(RDF.type, HTTP.Response).
-                addLiteral(HTTP.statusCodeValue, status.getStatusCode()).
-                addLiteral(HTTP.reasonPhrase, status.getReasonPhrase());
+        Resource resource = ModelFactory.createDefaultModel().createResource().addProperty(RDF.type, HTTP.Response)
+                .addLiteral(HTTP.statusCodeValue, status.getStatusCode())
+                .addLiteral(HTTP.reasonPhrase, status.getReasonPhrase());
 
-        if (statusResource != null) resource.addProperty(HTTP.sc, statusResource);
-        if (ex.getMessage() != null) resource.addLiteral(DCTerms.title, ex.getMessage());
-        
+        if (statusResource != null)
+            resource.addProperty(HTTP.sc, statusResource);
+        if (ex.getMessage() != null)
+            resource.addLiteral(DCTerms.title, ex.getMessage());
+
         return resource;
     }
-    
+
     // TO-DO: set Link headers in a ContainerResponseFilter instead
-    public Response.ResponseBuilder getResponseBuilder(Model model)
-    {
+    public Response.ResponseBuilder getResponseBuilder(Model model) {
         Variant variant = getRequest().selectVariant(getVariants(Model.class));
-        if (variant == null) variant = new Variant(com.atomgraph.core.MediaType.TEXT_TURTLE_TYPE, (Locale)null, null); // if still not acceptable, default to Turtle
+        if (variant == null)
+            variant = new Variant(com.atomgraph.core.MediaType.TEXT_TURTLE_TYPE, (Locale) null, null); // if still not
+                                                                                                       // acceptable,
+                                                                                                       // default to
+                                                                                                       // Turtle
 
         return new com.atomgraph.core.model.impl.Response(getRequest(),
                 model,
                 null,
                 new EntityTag(Long.toHexString(ModelUtils.hashModel(model))),
-                variant).
-                getResponseBuilder().
-            header(HttpHeaders.LINK, new Link(getUriInfo().getBaseUri(), LDT.base.getURI(), null));
+                variant).getResponseBuilder()
+                .header(HttpHeaders.LINK, new Link(getUriInfo().getBaseUri(), LDT.base.getURI(), null));
     }
 
     /**
@@ -97,56 +102,49 @@ abstract public class ExceptionMapperBase
      * @param clazz class
      * @return list of variants
      */
-    public List<Variant> getVariants(Class clazz)
-    {
+    public List<Variant> getVariants(Class clazz) {
         return getVariants(getWritableMediaTypes(clazz));
     }
-    
+
     /**
      * Builds a list of acceptable response variants.
      * 
      * @param mediaTypes
      * @return supported variants
      */
-    public List<Variant> getVariants(List<MediaType> mediaTypes)
-    {
-        return com.atomgraph.core.model.impl.Response.getVariantListBuilder(mediaTypes, getLanguages(), getEncodings()).add().build();
+    public List<Variant> getVariants(List<MediaType> mediaTypes) {
+        return com.atomgraph.core.model.impl.Response.getVariantListBuilder(mediaTypes, getLanguages(), getEncodings())
+                .add().build();
     }
-    
+
     /**
      * Get writable media types for a certain class.
      * 
      * @param clazz class
      * @return list of media types
      */
-    public List<MediaType> getWritableMediaTypes(Class clazz)
-    {
+    public List<MediaType> getWritableMediaTypes(Class clazz) {
         return getMediaTypes().getWritable(clazz);
     }
-    
-    public List<Locale> getLanguages()
-    {
+
+    public List<Locale> getLanguages() {
         return new ArrayList<>();
     }
 
-    public List<String> getEncodings()
-    {
+    public List<String> getEncodings() {
         return new ArrayList<>();
     }
-        
-    public Request getRequest()
-    {
+
+    public Request getRequest() {
         return request;
     }
-    
-    public MediaTypes getMediaTypes()
-    {
+
+    public MediaTypes getMediaTypes() {
         return mediaTypes;
     }
 
-    public UriInfo getUriInfo()
-    {
+    public UriInfo getUriInfo() {
         return uriInfo;
     }
-    
+
 }

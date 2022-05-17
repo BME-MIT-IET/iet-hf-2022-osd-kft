@@ -35,38 +35,39 @@ import org.apache.jena.ontology.Ontology;
  *
  * @author {@literal Martynas Jusevičius <martynas@atomgraph.com>}
  */
-public class ResponseHeaderFilter implements ContainerResponseFilter
-{
-    
-    @Inject javax.inject.Provider<Optional<Ontology>> ontology;
-    @Inject javax.inject.Provider<Optional<TemplateCall>> templateCall;
-    
-    @Context UriInfo uriInfo;
-    
+public class ResponseHeaderFilter implements ContainerResponseFilter {
+
+    @Inject
+    javax.inject.Provider<Optional<Ontology>> ontology;
+    @Inject
+    javax.inject.Provider<Optional<TemplateCall>> templateCall;
+
+    @Context
+    UriInfo uriInfo;
+
     @Override
-    public void filter(ContainerRequestContext request, ContainerResponseContext response) throws IOException
-    {
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) throws IOException {
         response.getHeaders().add(HttpHeaders.LINK, new Link(getUriInfo().getBaseUri(), LDT.base.getURI(), null));
 
         if (getOntology().isPresent()) // if it's not present, Link headers might be forwarded by ProxyResourceBase
-            response.getHeaders().add(HttpHeaders.LINK, new Link(URI.create(getOntology().get().getURI()), LDT.ontology.getURI(), null));
+            response.getHeaders().add(HttpHeaders.LINK,
+                    new Link(URI.create(getOntology().get().getURI()), LDT.ontologyProperty.getURI(), null));
         if (getTemplateCall().isPresent())
-            response.getHeaders().add(HttpHeaders.LINK, new Link(URI.create(getTemplateCall().get().getTemplate().getURI()), LDT.template.getURI(), null));
+            response.getHeaders().add(HttpHeaders.LINK,
+                    new Link(URI.create(getTemplateCall().get().getTemplate().getURI()), LDT.templateProperty.getURI(),
+                            null));
     }
 
-    public Optional<Ontology> getOntology()
-    {
+    public Optional<Ontology> getOntology() {
         return ontology.get();
     }
-    
-    public Optional<TemplateCall> getTemplateCall()
-    {
+
+    public Optional<TemplateCall> getTemplateCall() {
         return templateCall.get();
     }
-    
-    public UriInfo getUriInfo()
-    {
+
+    public UriInfo getUriInfo() {
         return uriInfo;
     }
-    
+
 }

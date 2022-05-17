@@ -46,371 +46,354 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Builder class that can build URIs from templates for RDF resources as well as models.
- * Needs to be initialized with sitemap ontology, ontology class matching request URI, and request URI information.
+ * Builder class that can build URIs from templates for RDF resources as well as
+ * models.
+ * Needs to be initialized with sitemap ontology, ontology class matching
+ * request URI, and request URI information.
  * 
  * @author Martynas Jusevičius {@literal <martynas@atomgraph.com>}
  */
-public class Skolemizer
-{
+public class Skolemizer {
     private static final Logger log = LoggerFactory.getLogger(Skolemizer.class);
+    private static final String UI_BUILDER_NULL_ERROR = "UriBuilder cannot be null";
+    private static final String RESOURCE_NULL_ERROR = "Resource cannot be null";
+    private static final String ONTCLASS_NULL_ERROR = "OntClass cannot be null";
 
     private final Ontology ontology;
     private final UriBuilder baseUriBuilder, absolutePathBuilder;
 
-    public Skolemizer(Ontology ontology, UriBuilder baseUriBuilder, UriBuilder absolutePathBuilder)
-    {
-        if (ontology == null) throw new IllegalArgumentException("Ontology cannot be null");
-        if (baseUriBuilder == null) throw new IllegalArgumentException("UriBuilder cannot be null");
-        if (absolutePathBuilder == null) throw new IllegalArgumentException("UriBuilder cannot be null");
+    public Skolemizer(Ontology ontology, UriBuilder baseUriBuilder, UriBuilder absolutePathBuilder) {
+        if (ontology == null)
+            throw new IllegalArgumentException("Ontology cannot be null");
+        if (baseUriBuilder == null)
+            throw new IllegalArgumentException(UI_BUILDER_NULL_ERROR);
+        if (absolutePathBuilder == null)
+            throw new IllegalArgumentException(UI_BUILDER_NULL_ERROR);
         this.ontology = ontology;
         this.baseUriBuilder = baseUriBuilder;
         this.absolutePathBuilder = absolutePathBuilder;
     }
 
-    public Model build(Model model)
-    {
-        if (model == null) throw new IllegalArgumentException("Model cannot be null");
+    public Model build(Model model) {
+        if (model == null)
+            throw new IllegalArgumentException("Model cannot be null");
 
         Map<Resource, String> resourceURIMap = new HashMap<>();
         ResIterator resIt = model.listSubjects();
-        try
-        {
-            while (resIt.hasNext())
-            {
+        try {
+            while (resIt.hasNext()) {
                 Resource resource = resIt.next();
-                if (resource.isAnon())
-                {
+                if (resource.isAnon()) {
                     URI uri = build(resource);
-                    if (uri != null) resourceURIMap.put(resource, uri.toString());
+                    if (uri != null)
+                        resourceURIMap.put(resource, uri.toString());
                 }
             }
-        }
-        finally
-        {
+        } finally {
             resIt.close();
         }
-        
+
         Iterator<Map.Entry<Resource, String>> entryIt = resourceURIMap.entrySet().iterator();
-        while (entryIt.hasNext())
-        {
+        while (entryIt.hasNext()) {
             Map.Entry<Resource, String> entry = entryIt.next();
             ResourceUtils.renameResource(entry.getKey(), entry.getValue());
         }
 
         return model;
     }
-    
-    public URI build(Resource resource)
-    {
-        if (resource == null) throw new IllegalArgumentException("Resource cannot be null");
-        
+
+    public URI build(Resource resource) {
+        if (resource == null)
+            throw new IllegalArgumentException(RESOURCE_NULL_ERROR);
+
         StmtIterator it = resource.listProperties(RDF.type);
-        
-        try
-        {
-            while (it.hasNext())
-            {
+
+        try {
+            while (it.hasNext()) {
                 Resource type = it.next().getResource(); // will fail if rdf:type object is not a resource
-                if (getOntology().getOntModel().getOntResource(type).canAs(OntClass.class))
-                {
+                if (getOntology().getOntModel().getOntResource(type).canAs(OntClass.class)) {
                     OntClass typeClass = getOntology().getOntModel().getOntResource(type).asClass();
                     OntClass pathClass = getPathClass(typeClass);
 
-                    if (pathClass != null)
-                    {
+                    if (pathClass != null) {
                         final String path = getStringValue(pathClass, LDT.path);
 
                         OntClass fragmentClass = getFragmentClass(typeClass);
                         final String fragment;
-                        if (fragmentClass != null) fragment = getStringValue(fragmentClass, LDT.fragment);
-                        else fragment = null;
+                        if (fragmentClass != null)
+                            fragment = getStringValue(fragmentClass, LDT.fragment);
+                        else
+                            fragment = null;
 
                         return build(resource, getUriBuilder(path, resource, typeClass), path, fragment);
                     }
                 }
             }
-        }
-        finally
-        {
+        } finally {
             it.close();
         }
-        
+
         return null;
     }
-    
-    public UriBuilder getUriBuilder(String path, Resource resource, OntClass typeClass)
-    {
-        if (path == null) throw new IllegalArgumentException("Path cannot be null");
-        if (typeClass == null) throw new IllegalArgumentException("OntClass cannot be null");
+
+    public UriBuilder getUriBuilder(String path, Resource resource, OntClass typeClass) {
+        if (path == null)
+            throw new IllegalArgumentException("Path cannot be null");
+        if (typeClass == null)
+            throw new IllegalArgumentException(ONTCLASS_NULL_ERROR);
 
         final UriBuilder builder;
-        // treat paths starting with / as absolute, others as relative (to the current absolute path)
-        // JAX-RS URI templates do not have this distinction (leading slash is irrelevant)
+        // treat paths starting with / as absolute, others as relative (to the current
+        // absolute path)
+        // JAX-RS URI templates do not have this distinction (leading slash is
+        // irrelevant)
         if (path.startsWith("/"))
             builder = getBaseUriBuilder().clone();
-        else
-        {
+        else {
             Resource parent = getParent(typeClass);
-            if (parent != null) builder = UriBuilder.fromUri(parent.getURI());
-            else builder = getAbsolutePathBuilder().clone();
+            if (parent != null)
+                builder = UriBuilder.fromUri(parent.getURI());
+            else
+                builder = getAbsolutePathBuilder().clone();
         }
-        
+
         return builder;
     }
-    
-    public URI build(Resource resource, UriBuilder builder, String path, String fragment)
-    {
-        if (resource == null) throw new IllegalArgumentException("Resource cannot be null");
-        if (builder == null) throw new IllegalArgumentException("UriBuilder cannot be null");
+
+    public URI build(Resource resource, UriBuilder builder, String path, String fragment) {
+        if (resource == null)
+            throw new IllegalArgumentException(RESOURCE_NULL_ERROR);
+        if (builder == null)
+            throw new IllegalArgumentException(UI_BUILDER_NULL_ERROR);
 
         Map<String, String> nameValueMap = getNameValueMap(resource, new UriTemplateParser(path));
-        return builder.path(path).fragment(fragment).buildFromMap(nameValueMap); // TO-DO: wrap into SkolemizationException
+        return builder.path(path).fragment(fragment).buildFromMap(nameValueMap); // TO-DO: wrap into
+                                                                                 // SkolemizationException
     }
 
-    public static Map<String, String> getNameValueMap(Resource resource, UriTemplateParser parser)
-    {
-        if (resource == null) throw new IllegalArgumentException("Resource cannot be null");
-        if (parser == null) throw new IllegalArgumentException("UriTemplateParser cannot be null");
+    public static Map<String, String> getNameValueMap(Resource resource, UriTemplateParser parser) {
+        if (resource == null)
+            throw new IllegalArgumentException(RESOURCE_NULL_ERROR);
+        if (parser == null)
+            throw new IllegalArgumentException("UriTemplateParser cannot be null");
 
         Map<String, String> nameValueMap = new HashMap<>();
-        
+
         List<String> names = parser.getNames();
-        for (String name : names)
-        {
+        for (String name : names) {
             Literal literal = getLiteral(resource, name);
-            if (literal != null) nameValueMap.put(name, literal.getString());
+            if (literal != null)
+                nameValueMap.put(name, literal.getString());
         }
 
         return nameValueMap;
     }
 
-    public static Literal getLiteral(Resource resource, String namePath)
-    {
-        if (resource == null) throw new IllegalArgumentException("Resource cannot be null");
+    public static Literal getLiteral(Resource resource, String namePath) {
+        if (resource == null)
+            throw new IllegalArgumentException(RESOURCE_NULL_ERROR);
 
-        if (namePath.contains("."))
-        {
+        if (namePath.contains(".")) {
             String name = namePath.substring(0, namePath.indexOf("."));
             String nameSubPath = namePath.substring(namePath.indexOf(".") + 1);
             Resource subResource = getResource(resource, name);
-            if (subResource != null) return getLiteral(subResource, nameSubPath);
+            if (subResource != null)
+                return getLiteral(subResource, nameSubPath);
         }
-        
+
         StmtIterator it = resource.listProperties();
-        try
-        {
-            while (it.hasNext())
-            {
+        try {
+            while (it.hasNext()) {
                 Statement stmt = it.next();
-                if (stmt.getObject().isLiteral() && stmt.getPredicate().getLocalName().equals(namePath))
-                {
-                    if (log.isTraceEnabled()) log.trace("Found Literal {} for property name: {} ", stmt.getLiteral(), namePath);
+                if (stmt.getObject().isLiteral() && stmt.getPredicate().getLocalName().equals(namePath)) {
+                    if (log.isTraceEnabled())
+                        log.trace("Found Literal {} for property name: {} ", stmt.getLiteral(), namePath);
                     return stmt.getLiteral();
                 }
             }
-        }
-        finally
-        {
+        } finally {
             it.close();
         }
-        
+
         return null;
     }
 
-    public static Resource getResource(Resource resource, String name)
-    {
-        if (resource == null) throw new IllegalArgumentException("Resource cannot be null");
-        
+    public static Resource getResource(Resource resource, String name) {
+        if (resource == null)
+            throw new IllegalArgumentException(RESOURCE_NULL_ERROR);
+
         StmtIterator it = resource.listProperties();
-        try
-        {
-            while (it.hasNext())
-            {
+        try {
+            while (it.hasNext()) {
                 Statement stmt = it.next();
-                if (stmt.getObject().isAnon() && stmt.getPredicate().getLocalName().equals(name))
-                {
-                    if (log.isTraceEnabled()) log.trace("Found Resource {} for property name: {} ", stmt.getResource(), name);
+                if (stmt.getObject().isAnon() && stmt.getPredicate().getLocalName().equals(name)) {
+                    if (log.isTraceEnabled())
+                        log.trace("Found Resource {} for property name: {} ", stmt.getResource(), name);
                     return stmt.getResource();
                 }
             }
-        }
-        finally
-        {
+        } finally {
             it.close();
         }
-        
+
         return null;
     }
 
-    public OntClass getPathClass(OntClass ontClass)
-    {
+    public OntClass getPathClass(OntClass ontClass) {
         return getPathClass(ontClass, getStringValue(ontClass, LDT.path));
     }
-    
-    public OntClass getPathClass(OntClass ontClass, String path)
-    {
-        if (ontClass == null) throw new IllegalArgumentException("OntClass cannot be null");
-        
-        if (path != null) return ontClass;
-        else
-        {
+
+    public OntClass getPathClass(OntClass ontClass, String path) {
+        if (ontClass == null)
+            throw new IllegalArgumentException(ONTCLASS_NULL_ERROR);
+
+        if (path != null)
+            return ontClass;
+        else {
             ExtendedIterator<OntClass> it = ontClass.listSuperClasses();
-            try
-            {
-                while (it.hasNext())
-                {
+            try {
+                while (it.hasNext()) {
                     OntClass superClass = it.next();
                     OntClass pathClass = getPathClass(superClass);
-                    if (pathClass != null) return pathClass;
+                    if (pathClass != null)
+                        return pathClass;
                 }
-            }
-            finally
-            {
+            } finally {
                 it.close();
             }
         }
-        
+
         return null;
     }
-    
-    public OntClass getFragmentClass(OntClass ontClass)
-    {
+
+    public OntClass getFragmentClass(OntClass ontClass) {
         return getFragmentClass(ontClass, getStringValue(ontClass, LDT.fragment));
     }
-    
-    public OntClass getFragmentClass(OntClass ontClass, String fragment)
-    {
-        if (ontClass == null) throw new IllegalArgumentException("OntClass cannot be null");
-        
-        if (fragment != null) return ontClass;
-        else
-        {
+
+    public OntClass getFragmentClass(OntClass ontClass, String fragment) {
+        if (ontClass == null)
+            throw new IllegalArgumentException(ONTCLASS_NULL_ERROR);
+
+        if (fragment != null)
+            return ontClass;
+        else {
             ExtendedIterator<OntClass> it = ontClass.listSuperClasses();
-            try
-            {
-                while (it.hasNext())
-                {
+            try {
+                while (it.hasNext()) {
                     OntClass superClass = it.next();
                     OntClass fragmentClass = getFragmentClass(superClass);
-                    if (fragmentClass != null) return fragmentClass;
+                    if (fragmentClass != null)
+                        return fragmentClass;
                 }
-            }
-            finally
-            {
+            } finally {
                 it.close();
             }
         }
-        
+
         return null;
     }
-    
-    protected String getStringValue(OntClass ontClass, Property property)
-    {
-        if (ontClass == null) throw new IllegalArgumentException("OntClass cannot be null");
-        if (property == null) throw new IllegalArgumentException("Property cannot be null");
 
-        if (ontClass.hasProperty(property))
-        {
+    protected String getStringValue(OntClass ontClass, Property property) {
+        if (ontClass == null)
+            throw new IllegalArgumentException(ONTCLASS_NULL_ERROR);
+        if (property == null)
+            throw new IllegalArgumentException("Property cannot be null");
+
+        if (ontClass.hasProperty(property)) {
             if (!ontClass.getPropertyValue(property).isLiteral() ||
                     ontClass.getPropertyValue(property).asLiteral().getDatatype() == null ||
-                    !ontClass.getPropertyValue(property).asLiteral().getDatatype().equals(XSDDatatype.XSDstring))
-            {
-                if (log.isErrorEnabled()) log.error("Class {} property {} is not an xsd:string literal", ontClass, property);
-                throw new OntologyException("Class '" + ontClass + "' property '" + property + "' is not an xsd:string literal");
+                    !ontClass.getPropertyValue(property).asLiteral().getDatatype().equals(XSDDatatype.XSDstring)) {
+                if (log.isErrorEnabled())
+                    log.error("Class {} property {} is not an xsd:string literal", ontClass, property);
+                throw new OntologyException(
+                        "Class '" + ontClass + "' property '" + property + "' is not an xsd:string literal");
             }
-            
+
             return ontClass.getPropertyValue(property).asLiteral().getString();
         }
-        
+
         return null;
     }
 
     // TO-DO: move to a LDTDH (document hierarchy) specific Skolemizer subclass
-    public Resource getParent(OntClass ontClass)
-    {
-        if (ontClass == null) throw new IllegalArgumentException("OntClass cannot be null");
+    public Resource getParent(OntClass ontClass) {
+        if (ontClass == null)
+            throw new IllegalArgumentException(ONTCLASS_NULL_ERROR);
 
         ExtendedIterator<OntClass> hasValueIt = ontClass.listSuperClasses();
-        try
-        {
+        try {
             while (hasValueIt.hasNext()) // TO-DO: catch org.apache.jena.ontology.ConversionException
             {
                 OntClass superClass = hasValueIt.next();
-                
-                if (superClass.canAs(HasValueRestriction.class))
-                {
+
+                if (superClass.canAs(HasValueRestriction.class)) {
                     HasValueRestriction hvr = superClass.as(HasValueRestriction.class);
-                    if (hvr.getOnProperty().equals(SIOC.HAS_PARENT) || hvr.getOnProperty().equals(SIOC.HAS_CONTAINER))
-                    {
-                        if (!hvr.getHasValue().isURIResource())
-                        {
-                            if (log.isErrorEnabled()) log.error("HasValue restriction on class {} for property {} is not a URI resource", ontClass, hvr.getOnProperty());
-                            throw new OntologyException("HasValue restriction on class '" + ontClass + "' for property '" + hvr.getOnProperty() + "' is not a URI resource");
+                    if (hvr.getOnProperty().equals(SIOC.HAS_PARENT) || hvr.getOnProperty().equals(SIOC.HAS_CONTAINER)) {
+                        if (!hvr.getHasValue().isURIResource()) {
+                            if (log.isErrorEnabled())
+                                log.error("HasValue restriction on class {} for property {} is not a URI resource",
+                                        ontClass, hvr.getOnProperty());
+                            throw new OntologyException("HasValue restriction on class '" + ontClass
+                                    + "' for property '" + hvr.getOnProperty() + "' is not a URI resource");
                         }
-                        
+
                         return hvr.getHasValue().asResource();
                     }
                 }
             }
-        }
-        catch (ConversionException ex)
-        {
-            if (log.isErrorEnabled()) log.error("Class '{}' has invalid (unresolved) superclass. Check if all superclass ontologies are imported", ontClass);
+        } catch (ConversionException ex) {
+            if (log.isErrorEnabled())
+                log.error(
+                        "Class '{}' has invalid (unresolved) superclass. Check if all superclass ontologies are imported",
+                        ontClass);
             throw new OntologyException(ex);
-        }
-        finally
-        {
+        } finally {
             hasValueIt.close();
         }
-        
+
         ExtendedIterator<OntClass> allValuesFromIt = ontClass.listSuperClasses();
-        try
-        {
-            while (allValuesFromIt.hasNext())
-            {
+        try {
+            while (allValuesFromIt.hasNext()) {
                 OntClass superClass = allValuesFromIt.next();
-                
-                if (superClass.canAs(AllValuesFromRestriction.class))
-                {
+
+                if (superClass.canAs(AllValuesFromRestriction.class)) {
                     AllValuesFromRestriction avr = superClass.as(AllValuesFromRestriction.class);
-                    if (!avr.getAllValuesFrom().canAs(OntClass.class))
-                    {
-                        if (log.isErrorEnabled()) log.error("AllValuesFrom restriction on class {} for property {} is not an OntClass resource", ontClass, avr.getOnProperty());
-                        throw new OntologyException("AllValuesFrom restriction on class '" + ontClass + "' for property '" + avr.getOnProperty() + "' is not an OntClass resource");
+                    if (!avr.getAllValuesFrom().canAs(OntClass.class)) {
+                        if (log.isErrorEnabled())
+                            log.error(
+                                    "AllValuesFrom restriction on class {} for property {} is not an OntClass resource",
+                                    ontClass, avr.getOnProperty());
+                        throw new OntologyException("AllValuesFrom restriction on class '" + ontClass
+                                + "' for property '" + avr.getOnProperty() + "' is not an OntClass resource");
                     }
 
                     OntClass valueClass = avr.getAllValuesFrom().as(OntClass.class);
                     return getParent(valueClass);
                 }
             }
-        }
-        catch (ConversionException ex)
-        {
-            if (log.isErrorEnabled()) log.error("Class '{}' has invalid (unresolved) superclass. Check if all superclass ontologies are imported", ontClass);
+        } catch (ConversionException ex) {
+            if (log.isErrorEnabled())
+                log.error(
+                        "Class '{}' has invalid (unresolved) superclass. Check if all superclass ontologies are imported",
+                        ontClass);
             throw new OntologyException(ex);
-        }
-        finally
-        {
+        } finally {
             allValuesFromIt.close();
         }
-        
+
         return null;
     }
-    
-    public Ontology getOntology()
-    {
+
+    public Ontology getOntology() {
         return ontology;
     }
-    
-    public UriBuilder getBaseUriBuilder()
-    {
+
+    public UriBuilder getBaseUriBuilder() {
         return baseUriBuilder;
     }
-    
-    public UriBuilder getAbsolutePathBuilder()
-    {
+
+    public UriBuilder getAbsolutePathBuilder() {
         return absolutePathBuilder;
     }
-    
+
 }
