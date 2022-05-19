@@ -7,13 +7,15 @@ on:
     branches: [ main ]
 
 jobs:
-  load-stress-tests:
-    name: Build Docker image and run stress test
+  k6_local_test:
+    name: k6 local test run - summary example
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Start server and run tests
-        run: |
-          npm start & npx wait-on http://localhost:8080
-          ./k6 run stress-tests/test1.js
+        uses: actions/checkout@v1
+
+      - name: Run local k6 test
+        uses: grafana/k6-action@v0.2.0
+        with:
+          filename: stress-tests/test1.js
