@@ -18,17 +18,22 @@ jobs:
       - name: Build Docker image
         run: docker build -t atomgraph/processor .
       - name: Run Docker containers
-        run: docker-compose up #-d
-        working-directory: http-tests
-      - name: Wait for the servers to start...
-        run: |
-          while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8080 | grep "404" ; do sleep 1 ; done # wait for processor-ct to start
-          while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8081 | grep "404" ; do sleep 1 ; done # wait for processor-ct-write to start
-          while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8082 | grep "404" ; do sleep 1 ; done # wait for processor-ngt to start
-          while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8083 | grep "404" ; do sleep 1 ; done # wait for processor-ngt-write to start
-          while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8085 | grep "404" ; do sleep 1 ; done # wait for processor-custom to start
-          while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8086 | grep "404" ; do sleep 1 ; done # wait for processor-custom-write to start
+        run: docker-compose run --rm k6 run
       - name: Run local k6 test
         uses: grafana/k6-action@v0.2.0
         with:
-          filename: stress-tests/test3.js
+          filename: stress-tests/test2.js
+       # run: docker-compose up #-d
+      #  working-directory: http-tests
+     # - name: Wait for the servers to start...
+     #   run: |
+      #    while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8080 | grep "404" ; do sleep 1 ; done # wait for processor-ct to start
+      #    while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8081 | grep "404" ; do sleep 1 ; done # wait for processor-ct-write to start
+      #    while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8082 | grep "404" ; do sleep 1 ; done # wait for processor-ngt to start
+      #    while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8083 | grep "404" ; do sleep 1 ; done # wait for processor-ngt-write to start
+      #    while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8085 | grep "404" ; do sleep 1 ; done # wait for processor-custom to start
+      #    while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8086 | grep "404" ; do sleep 1 ; done # wait for processor-custom-write to start
+      #- name: Run local k6 test
+      #  uses: grafana/k6-action@v0.2.0
+      #  with:
+      #    filename: stress-tests/test3.js
