@@ -19,6 +19,7 @@ jobs:
         run: docker build -t atomgraph/processor .
       - name: Run Docker containers
         run: docker-compose run --rm k6 run
+        working-directory: http-tests
       - name: Run local k6 test
         uses: grafana/k6-action@v0.2.0
         with:
