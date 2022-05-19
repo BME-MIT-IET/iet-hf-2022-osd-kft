@@ -29,6 +29,6 @@ jobs:
           while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8085 | grep "404" ; do sleep 1 ; done # wait for processor-custom to start
           while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8086 | grep "404" ; do sleep 1 ; done # wait for processor-custom-write to start
       - name: Run local k6 test
+        uses: grafana/k6-action@v0.2.0
         with:
-          uses: grafana/k6-action@v0.2.0
-          filename: stress-tests/test3.js
+          filename: test.js
