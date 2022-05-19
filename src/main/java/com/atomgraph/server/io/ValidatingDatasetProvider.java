@@ -97,7 +97,7 @@ public class ValidatingDatasetProvider extends DatasetProvider
                 if (!cvs.isEmpty())
                 {
                     if (log.isDebugEnabled()) log.debug("SPIN constraint violations: {}", cvs);
-                    throw new SPINConstraintViolationException(cvs, dataset.getNamedModel(graphURI), graphURI);
+                    throw new SPINConstraintViolationException(cvs, dataset.getNamedModel(graphURI));
                 }
 
                 // SHACL validation

@@ -16,6 +16,8 @@
 
 package com.atomgraph.processor.util;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -29,65 +31,55 @@ import org.junit.Test;
  *
  * @author {@literal Martynas Jusevičius <martynas@atomgraph.com>}
  */
-public class OntModelReadOnlyTest
-{
+public class OntModelReadOnlyTest {
 
     private final OntModelReadOnly ontModelRO;
-    
-    public OntModelReadOnlyTest()
-    {
+
+    public OntModelReadOnlyTest() {
         this.ontModelRO = new OntModelReadOnly(ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
-                ModelFactory.createDefaultModel().
-                    add(ResourceFactory.createResource("http://s"),
+                ModelFactory.createDefaultModel().add(ResourceFactory.createResource("http://s"),
                         ResourceFactory.createProperty("http://p"),
                         ResourceFactory.createResource("http://o"))));
     }
-    
-    public void testListOntClasses()
-    {
+
+    public void testListOntClasses() {
         ExtendedIterator<OntClass> it = ontModelRO.listClasses();
-        
-        try
-        {
+
+        try {
             it.hasNext();
-        }
-        finally
-        {
+        } finally {
             it.close();
         }
     }
-    
+
     @Test
-    public void testGetResource()
-    {
+    public void testGetResource() {
         StmtIterator it = ontModelRO.listStatements();
-        
-        try
-        {
-            it.next().getSubject().equals(ontModelRO.getResource("http://s"));
-        }
-        finally
-        {
+
+        try {
+            boolean success = it.next().getSubject().equals(ontModelRO.getResource("http://s"));
+            assertTrue(success);
+        } finally {
             it.close();
         }
     }
-    
+
     @Test(expected = AccessDeniedException.class)
-    public void testAdd()
-    {
-        ontModelRO.add(ontModelRO.getResource("http://x"), ontModelRO.getProperty("http://y"), ontModelRO.getResource("http://z"));
+    public void testAdd() {
+        ontModelRO.add(ontModelRO.getResource("http://x"), ontModelRO.getProperty("http://y"),
+                ontModelRO.getResource("http://z"));
     }
-    
+
     @Test(expected = AccessDeniedException.class)
-    public void testRemove()
-    {
-        ontModelRO.remove(ontModelRO.getResource("http://x"), ontModelRO.getProperty("http://y"), ontModelRO.getResource("http://z"));
+    public void testRemove() {
+        ontModelRO.remove(ontModelRO.getResource("http://x"), ontModelRO.getProperty("http://y"),
+                ontModelRO.getResource("http://z"));
     }
-    
+
     @Test(expected = AccessDeniedException.class)
-    public void testGetRawModelAdd()
-    {
-        ontModelRO.getRawModel().add(ontModelRO.getResource("http://x"), ontModelRO.getProperty("http://x"), ontModelRO.getResource("http://x"));
+    public void testGetRawModelAdd() {
+        ontModelRO.getRawModel().add(ontModelRO.getResource("http://x"), ontModelRO.getProperty("http://x"),
+                ontModelRO.getResource("http://x"));
     }
-    
+
 }

@@ -29,69 +29,84 @@ import org.apache.jena.rdf.model.Resource;
  * 
  * @author Martynas Jusevičius {@literal <martynas@atomgraph.com>}
  */
-public final class LDT
-{
-    /** <p>The RDF model that holds the vocabulary terms</p> */
+public final class LDT {
+    /**
+     * <p>
+     * The RDF model that holds the vocabulary terms
+     * </p>
+     */
     private static OntModel m_model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, null);
-    
-    /** <p>The namespace of the vocabulary as a string</p> */
+
+    /**
+     * <p>
+     * The namespace of the vocabulary as a string
+     * </p>
+     */
     public static final String NS = "https://www.w3.org/ns/ldt#";
-    
-    /** <p>The namespace of the vocabulary as a string</p>
-     *  @see #NS */
-    public static String getURI()
-    {
-	return NS;
+
+    /**
+     * <p>
+     * The namespace of the vocabulary as a string
+     * </p>
+     * 
+     * @see #NS
+     */
+    public static String getURI() {
+        return NS;
     }
-    
-    /** <p>The namespace of the vocabulary as a resource</p> */
-    public static final Resource NAMESPACE = m_model.createResource( NS );
 
-    public static final OntClass Application = m_model.createClass( NS + "Application" );
+    /**
+     * <p>
+     * The namespace of the vocabulary as a resource
+     * </p>
+     */
+    public static final Resource NAMESPACE = m_model.createResource(NS);
 
-    public static final OntClass Ontology = m_model.createClass( NS + "Ontology" );
+    public static final OntClass Application = m_model.createClass(NS + "Application");
 
-    public static final OntClass Template = m_model.createClass( NS + "Template" );
+    public static final OntClass Ontology = m_model.createClass(NS + "Ontology");
 
-    public static final OntClass Parameter = m_model.createClass( NS + "Parameter" );
+    public static final OntClass Template = m_model.createClass(NS + "Template");
 
-    public static final OntClass TemplateCall = m_model.createClass( NS + "TemplateCall" );
+    public static final OntClass Parameter = m_model.createClass(NS + "Parameter");
 
-    public static final OntClass Argument = m_model.createClass( NS + "Argument" );
+    public static final OntClass TemplateCall = m_model.createClass(NS + "TemplateCall");
 
-    public static final ObjectProperty base = m_model.createObjectProperty( NS + "base" );
+    public static final OntClass Argument = m_model.createClass(NS + "Argument");
 
-    public static final ObjectProperty ontology = m_model.createObjectProperty( NS + "ontology" );
+    public static final ObjectProperty base = m_model.createObjectProperty(NS + "base");
 
-    public static final ObjectProperty service = m_model.createObjectProperty( NS + "service" );
+    public static final ObjectProperty ontologyProperty = m_model.createObjectProperty(NS + "ontology");
 
-    public static final ObjectProperty arg = m_model.createObjectProperty( NS + "arg" );
-    
-    public static final DatatypeProperty paramName = m_model.createDatatypeProperty( NS + "paramName" );    
+    public static final ObjectProperty service = m_model.createObjectProperty(NS + "service");
+
+    public static final ObjectProperty arg = m_model.createObjectProperty(NS + "arg");
+
+    public static final DatatypeProperty paramName = m_model.createDatatypeProperty(NS + "paramName");
 
     // "extends" is a reserved keyword in Java, obviously
-    public static final ObjectProperty extends_ = m_model.createObjectProperty( NS + "extends" );
+    public static final ObjectProperty extends_ = m_model.createObjectProperty(NS + "extends");
 
-    public static final DatatypeProperty path = m_model.createDatatypeProperty( NS + "path" );
-    
-    public static final ObjectProperty query = m_model.createObjectProperty( NS + "query" );
+    public static final DatatypeProperty path = m_model.createDatatypeProperty(NS + "path");
 
-    public static final ObjectProperty update = m_model.createObjectProperty( NS + "update" );
+    public static final ObjectProperty query = m_model.createObjectProperty(NS + "query");
 
-    public static final DatatypeProperty match = m_model.createDatatypeProperty( NS + "match" );
+    public static final ObjectProperty update = m_model.createObjectProperty(NS + "update");
 
-    public static final DatatypeProperty priority = m_model.createDatatypeProperty( NS + "priority" );
+    public static final DatatypeProperty match = m_model.createDatatypeProperty(NS + "match");
 
-    public static final DatatypeProperty fragment = m_model.createDatatypeProperty( NS + "fragment" );
+    public static final DatatypeProperty priority = m_model.createDatatypeProperty(NS + "priority");
 
-    public static final ObjectProperty param = m_model.createObjectProperty( NS + "param" );
-    
-    public static final ObjectProperty loadClass = m_model.createObjectProperty( NS + "loadClass" );
+    public static final DatatypeProperty fragment = m_model.createDatatypeProperty(NS + "fragment");
 
-    public static final DatatypeProperty cacheControl = m_model.createDatatypeProperty( NS + "cacheControl" );
-    
-    public static final ObjectProperty lang = m_model.createObjectProperty( NS + "lang" );
+    public static final ObjectProperty param = m_model.createObjectProperty(NS + "param");
 
-    public static final ObjectProperty template = m_model.createObjectProperty( NS + "template" );
+    public static final ObjectProperty loadClass = m_model.createObjectProperty(NS + "loadClass");
+
+    public static final DatatypeProperty cacheControl = m_model.createDatatypeProperty(NS + "cacheControl");
+
+    public static final ObjectProperty lang = m_model.createObjectProperty(NS + "lang");
+
+    public static final ObjectProperty templateProperty = m_model.createObjectProperty(NS + "template");
 
 }
