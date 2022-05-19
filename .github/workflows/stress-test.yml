@@ -1,24 +1,14 @@
-name: stress-test
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  stress-test:
-    name: Build Docker image and run stress test
+   name: Build Docker image and run stress test
     runs-on: ubuntu-latest
     steps:
       - name: Install Linux packages
         run: sudo apt-get update && sudo apt-get install -qq raptor2-utils
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Build Docker image
         run: docker build -t atomgraph/processor .
       - name: Run Docker containers
-        run: docker-compose up -d
+        run: docker-compose up -d # run fuseki and processor containers in the background
         working-directory: http-tests
       - name: Wait for the servers to start...
         run: |
@@ -28,7 +18,7 @@ jobs:
           while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8083 | grep "404" ; do sleep 1 ; done # wait for processor-ngt-write to start
           while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8085 | grep "404" ; do sleep 1 ; done # wait for processor-custom to start
           while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8086 | grep "404" ; do sleep 1 ; done # wait for processor-custom-write to start
-      - name: Run local k6 test
-        uses: grafana/k6-action@v0.2.0
-        with:
-          filename: stress-tests/test2.js
+       - name: Run local k6 test
+         uses: grafana/k6-action@v0.2.0
+         with:
+           filename: stress-tests/test3.js
