@@ -18,8 +18,8 @@ jobs:
       - name: Build Docker image
         run: docker build -t atomgraph/processor .
       - name: Run Docker containers
-        run: docker-compose up -d # run fuseki and processor containers in the background
-        working-directory: http-tests
+        run: docker-compose up #-d
+       # working-directory: http-tests
       - name: Wait for the servers to start...
         run: |
           while ! curl -w "%{http_code}\n" -s -o /dev/null http://localhost:8080 | grep "404" ; do sleep 1 ; done # wait for processor-ct to start
