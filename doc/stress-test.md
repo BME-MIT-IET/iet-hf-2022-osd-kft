@@ -12,7 +12,7 @@ A K6 szolgáltatásnak utánajárva és megértve a stressz-teszteket megírtam,
 
 #### Első teszt eredménye
 
-![Első stressz teszt eredménye]('doc/first_stress_test.png')
+![Első stressz teszt eredménye](first_stress_test.png)
 
 ### Tanulságok
 
